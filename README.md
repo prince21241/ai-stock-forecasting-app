@@ -182,7 +182,7 @@ Validate Compose configuration with `docker compose config`.
 - Provider history and request frequency depend on the Alpha Vantage plan.
 - Authentication, authorization, streaming updates, and background scheduling are not implemented.
 - Synchronization is user-triggered and runs within the HTTP request.
-- The dashboard displays the newest 100 stored records.
+- The dashboard visualizes up to 500 stored daily records as an interactive candlestick and volume chart, with 1-month through all-history range controls.
 
 See [docs/roadmap.md](docs/roadmap.md) for future phases. Forecasting and agent capabilities remain future work.
 

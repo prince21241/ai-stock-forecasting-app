@@ -28,6 +28,5 @@ export function synchronizeStock(symbol: string): Promise<StockSyncResponse> {
 }
 
 export function loadStockData(symbol: string): Promise<StockListResponse> {
-  return request(`/stocks/${encodeURIComponent(symbol)}?limit=100&order=desc`);
+  return request(`/stocks/${encodeURIComponent(symbol)}?limit=500&order=desc`);
 }
-

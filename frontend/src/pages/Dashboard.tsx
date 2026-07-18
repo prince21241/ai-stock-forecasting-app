@@ -4,7 +4,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { Header } from "../components/Header";
 import { LoadingState } from "../components/LoadingState";
 import { StockSearch } from "../components/StockSearch";
-import { StockTable } from "../components/StockTable";
+import { StockChart } from "../components/StockChart";
 import { SummaryCards } from "../components/SummaryCards";
 import type { StockListResponse } from "../types/stock";
 
@@ -53,7 +53,7 @@ export function Dashboard() {
         <SummaryCards result={result} symbol={symbol} />
         <section className="data-section">
           <div className="section-heading"><div><p className="eyebrow">Daily price history</p><h2>Stored market data</h2></div>{result && <span className="source-pill">{result.cached ? "Redis cache" : "SQLite"}</span>}</div>
-          <StockTable rows={result?.data ?? []} />
+          <StockChart rows={result?.data ?? []} symbol={result?.symbol ?? symbol.toUpperCase()} />
         </section>
       </main>
       <footer><p>For educational and research use only. This application does not provide financial advice.</p><span>Stock Agent Ops · Phase 1</span></footer>
