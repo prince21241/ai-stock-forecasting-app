@@ -1,10 +1,12 @@
 # Stock Agent Ops
 
-**AI-Driven Forecasting & Multi-Agent Platform — Phase 1 data foundation**
+**AI-Driven Forecasting & Multi-Agent Platform — Phase 2 experimental forecasting**
 
 Stock Agent Ops is a modular full-stack application for synchronizing Alpha Vantage daily stock prices, storing them idempotently in a local SQLite database, serving them through FastAPI, optionally caching reads in Redis, and displaying stored data in a responsive React dashboard.
 
-Phase 1 does **not** implement forecasting, ML models, AI agents, automated reports, MLflow, Feast, Kubernetes, Terraform, AWS, or OpenAI integrations.
+Phase 2 adds an experimental, user-triggered next-trading-day ridge-regression forecast with
+walk-forward evaluation. AI agents, automated reports, MLflow, Feast, Kubernetes, Terraform, AWS,
+and OpenAI integrations are not implemented.
 
 ## Architecture and stack
 
@@ -143,7 +145,14 @@ curl http://localhost:8000/api/v1/health
 curl -X POST http://localhost:8000/api/v1/stocks/AAPL/sync
 curl "http://localhost:8000/api/v1/stocks/AAPL?limit=100&order=desc"
 curl http://localhost:8000/api/v1/stocks/AAPL/latest
+curl -X POST http://localhost:8000/api/v1/forecasts/AAPL/train
 ```
+
+The forecast requires at least 100 stored daily records, matching Alpha Vantage's compact daily
+feed. It reports predicted return and price,
+an empirical 90% range, a direction estimate, walk-forward MAE, directional accuracy, and the MAE
+of a zero-return baseline. The dashboard explicitly reports when the model fails to beat that
+baseline. Training runs within the request and results are not yet persisted between requests.
 
 The list endpoint also accepts ISO `start_date` and `end_date`. `limit` must be 1–5000. Supported symbols contain 1–15 letters, digits, periods, or hyphens.
 
@@ -184,7 +193,8 @@ Validate Compose configuration with `docker compose config`.
 - Synchronization is user-triggered and runs within the HTTP request.
 - The dashboard visualizes up to 500 stored daily records as an interactive candlestick and volume chart, with 1-month through all-history range controls.
 
-See [docs/roadmap.md](docs/roadmap.md) for future phases. Forecasting and agent capabilities remain future work.
+See [docs/roadmap.md](docs/roadmap.md) for future phases. Forecasting is experimental; agent
+capabilities remain future work.
 
 ## Disclaimer
 

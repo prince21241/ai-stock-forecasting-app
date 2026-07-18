@@ -46,8 +46,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    description="Phase 1 stock ingestion and storage API.",
-    version="0.1.0",
+    description="Stock data foundation with an experimental Phase 2 forecast.",
+    version="0.2.0",
     lifespan=lifespan,
 )
 app.add_middleware(

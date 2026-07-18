@@ -24,4 +24,7 @@ The unique constraint on `(symbol, trading_date, source)` is the final idempoten
 5. Cached reads for that symbol are invalidated.
 6. The dashboard requests stored records and renders the result.
 
-No forecasting, machine learning, agent, or cloud deployment component is part of Phase 1.
+Phase 1 remains the data foundation. Phase 2 adds a separate, user-triggered forecast service that
+reads stored prices through `StockRepository`, engineers features in memory, performs walk-forward
+evaluation, and returns an experimental next-day forecast. It does not add AI agents or cloud
+deployment.

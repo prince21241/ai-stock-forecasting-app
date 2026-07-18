@@ -5,8 +5,7 @@ export function Header() {
         <span className="brand-mark">SO</span>
         <span>Stock Agent Ops</span>
       </a>
-      <span className="phase-badge">Phase 1 · Data foundation</span>
+      <span className="phase-badge">Phase 2 · Experimental ML</span>
     </header>
   );
 }
-

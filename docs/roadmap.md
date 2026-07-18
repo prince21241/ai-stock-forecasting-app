@@ -1,6 +1,6 @@
 # Roadmap
 
-## Phase 1 — data foundation (current)
+## Phase 1 — data foundation (complete)
 
 - Alpha Vantage daily ingestion
 - SQLite normalized storage and Alembic migrations
@@ -8,9 +8,19 @@
 - FastAPI endpoints and React dashboard
 - Docker Compose, tests, linting, and documentation
 
+## Phase 2 — experimental forecasting (current)
+
+- User-triggered next-trading-day ridge-regression forecast
+- OHLCV-derived momentum, volatility, moving-average, range, and volume features
+- Expanding-window walk-forward evaluation against a zero-return baseline
+- Empirical prediction range, direction estimate, and dashboard disclosure
+
+The model requires at least 100 stored daily records, matching Alpha Vantage's compact daily feed.
+It is an educational experiment, is not
+automatically retrained, and does not provide investment advice or guaranteed probabilities.
+
 ## Future phases (not implemented)
 
-- Forecasting experiments and model evaluation
 - Feature engineering and feature-store decisions
 - Multi-agent orchestration and approval workflows
 - Experiment tracking and automated reporting

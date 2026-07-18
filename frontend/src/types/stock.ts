@@ -27,3 +27,12 @@ export interface StockSyncResponse {
   synced_at: string;
 }
 
+export interface ForecastResponse {
+  symbol: string; as_of_date: string; latest_close: number;
+  predicted_return_percent: number; predicted_price: number;
+  price_range_low: number; price_range_high: number; probability_up_percent: number;
+  training_observations: number; model_name: string; model_version: string;
+  trained_at: string; disclaimer: string;
+  metrics: { model_mae_percent: number; baseline_mae_percent: number;
+    directional_accuracy_percent: number; validation_observations: number; beats_baseline: boolean; };
+}

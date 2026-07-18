@@ -83,3 +83,9 @@ class StockRepository:
             )
             or 0
         )
+
+    async def get_all_prices_by_symbol(self, symbol: str) -> list[StockPrice]:
+        result = await self.session.scalars(
+            self._price_query(symbol).order_by(StockPrice.trading_date.asc())
+        )
+        return list(result.all())
