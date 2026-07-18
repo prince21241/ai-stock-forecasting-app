@@ -23,7 +23,7 @@ def service(request: Request, db: AsyncSession) -> StockService:
     response_model=StockSyncResponse,
     status_code=status.HTTP_200_OK,
     summary="Synchronize daily stock prices",
-    description="Fetches Alpha Vantage daily prices and idempotently stores them in PostgreSQL.",
+    description="Fetches Alpha Vantage daily prices and idempotently stores them in SQLite.",
 )
 async def sync_stock(
     symbol: str, request: Request, db: Annotated[AsyncSession, Depends(get_db)]
@@ -35,9 +35,7 @@ async def sync_stock(
     "/{symbol}",
     response_model=StockListResponse,
     summary="Read stored stock prices",
-    description=(
-        "Returns filtered PostgreSQL records, using Redis as an optional five-minute cache."
-    ),
+    description=("Returns filtered SQLite records, using Redis as an optional five-minute cache."),
 )
 async def get_stock_prices(
     symbol: str,

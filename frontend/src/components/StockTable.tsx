@@ -5,7 +5,7 @@ const volume = new Intl.NumberFormat("en-US");
 
 export function StockTable({ rows }: { rows: StockPrice[] }) {
   if (!rows.length) {
-    return <div className="empty-state"><strong>No stored data loaded</strong><span>Synchronize a symbol or load existing PostgreSQL records.</span></div>;
+    return <div className="empty-state"><strong>No stored data loaded</strong><span>Synchronize a symbol or load existing SQLite records.</span></div>;
   }
   return (
     <div className="table-wrap">
@@ -24,4 +24,3 @@ export function StockTable({ rows }: { rows: StockPrice[] }) {
     </div>
   );
 }
-

@@ -52,7 +52,7 @@ export function Dashboard() {
         {success && <div className="message success" role="status">{success}</div>}
         <SummaryCards result={result} symbol={symbol} />
         <section className="data-section">
-          <div className="section-heading"><div><p className="eyebrow">Daily price history</p><h2>Stored market data</h2></div>{result && <span className="source-pill">{result.cached ? "Redis cache" : "PostgreSQL"}</span>}</div>
+          <div className="section-heading"><div><p className="eyebrow">Daily price history</p><h2>Stored market data</h2></div>{result && <span className="source-pill">{result.cached ? "Redis cache" : "SQLite"}</span>}</div>
           <StockTable rows={result?.data ?? []} />
         </section>
       </main>
@@ -60,4 +60,3 @@ export function Dashboard() {
     </div>
   );
 }
-

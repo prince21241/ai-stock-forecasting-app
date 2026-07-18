@@ -20,3 +20,5 @@ def configure_logging(debug: bool = False) -> None:
     root = logging.getLogger()
     root.handlers = [handler]
     root.setLevel(logging.DEBUG if debug else logging.INFO)
+    for logger_name in ("aiosqlite", "sqlalchemy.engine", "httpx", "httpcore"):
+        logging.getLogger(logger_name).setLevel(logging.WARNING)

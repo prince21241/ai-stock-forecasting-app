@@ -2,16 +2,16 @@
 
 **AI-Driven Forecasting & Multi-Agent Platform — Phase 1 data foundation**
 
-Stock Agent Ops is a modular full-stack application for synchronizing Alpha Vantage daily stock prices, storing them idempotently in PostgreSQL, serving them through FastAPI, caching reads in Redis, and displaying stored data in a responsive React dashboard.
+Stock Agent Ops is a modular full-stack application for synchronizing Alpha Vantage daily stock prices, storing them idempotently in a local SQLite database, serving them through FastAPI, optionally caching reads in Redis, and displaying stored data in a responsive React dashboard.
 
 Phase 1 does **not** implement forecasting, ML models, AI agents, automated reports, MLflow, Feast, Kubernetes, Terraform, AWS, or OpenAI integrations.
 
 ## Architecture and stack
 
-The React/Vite dashboard calls a FastAPI API. Synchronization requests fetch `TIME_SERIES_DAILY` data from Alpha Vantage, normalize prices as decimal values, and upsert them into PostgreSQL. Read responses are cached in Redis for five minutes; Redis failures degrade caching without blocking PostgreSQL reads. See [docs/architecture.md](docs/architecture.md).
+The React/Vite dashboard calls a FastAPI API. Synchronization requests fetch `TIME_SERIES_DAILY` data from Alpha Vantage, normalize prices as decimal values, and upsert them into SQLite. Read responses are cached in Redis for five minutes when Redis is available; Redis failures do not block SQLite reads. See [docs/architecture.md](docs/architecture.md).
 
 - Python 3.12, FastAPI, Pydantic v2, HTTPX
-- SQLAlchemy 2 async, asyncpg, PostgreSQL 16, Alembic
+- SQLAlchemy 2 async, aiosqlite, SQLite, Alembic
 - Redis 7
 - React 19, TypeScript, Vite
 - pytest, pytest-asyncio, Ruff
@@ -40,7 +40,7 @@ The React/Vite dashboard calls a FastAPI API. Synchronization requests fetch `TI
 
 ## Prerequisites
 
-For the recommended path, install Docker Desktop with Docker Compose. For direct local development, use Python 3.12, Node.js 22+, npm, PostgreSQL, and Redis.
+For the recommended no-Docker path, install Python 3.12, Node.js 22+, and npm. SQLite is included with Python and needs no database server. Redis is optional; without it, the API reads directly from SQLite and health reports a degraded cache status.
 
 Create a free Alpha Vantage API key at [Alpha Vantage](https://www.alphavantage.co/support/#api-key). Never commit the key.
 
@@ -60,6 +60,31 @@ Copy-Item .env.example .env
 
 Set `ALPHA_VANTAGE_API_KEY` in `.env`. Docker Compose supplies safe local defaults for all other values and automatically reads `.env` when present. The key is never logged. `.env` is ignored by Git.
 
+## Run locally without Docker (recommended)
+
+From the repository root, install the backend and apply the SQLite migration:
+
+```powershell
+backend\.venv\Scripts\python.exe -m pip install -e ".\backend[dev]"
+backend\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
+```
+
+Start the backend in the first PowerShell window:
+
+```powershell
+backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload --port 8000
+```
+
+Start the frontend in a second PowerShell window:
+
+```powershell
+Set-Location frontend
+npm.cmd install
+npm.cmd run dev
+```
+
+Redis is not required for this workflow. If it is not running, `/health` reports `degraded` while stock synchronization and SQLite reads continue to work.
+
 ## Run with Docker
 
 ```bash
@@ -72,7 +97,7 @@ Open:
 - API docs: <http://localhost:8000/docs>
 - Health: <http://localhost:8000/api/v1/health>
 
-The backend waits for PostgreSQL, applies Alembic migrations, and starts Uvicorn. PostgreSQL data persists in the `postgres_data` named volume.
+The backend applies Alembic migrations and starts Uvicorn. When Compose is used, SQLite data persists in the `sqlite_data` named volume.
 
 Stop the system with `docker compose down`. Use `make up`, `make down`, or `make logs` as shortcuts where Make is available.
 
@@ -88,7 +113,7 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-For a host-run backend, override `DATABASE_URL` and `REDIS_URL` to use `localhost` instead of Docker service names.
+The default local database is `stock_agent_ops.db`. The file, its journal files, and `.env` are ignored by Git.
 
 Database migration commands:
 
@@ -146,10 +171,10 @@ Validate Compose configuration with `docker compose config`.
 
 - **Sync reports a missing key:** set a real `ALPHA_VANTAGE_API_KEY` in `.env` and recreate the backend container.
 - **HTTP 429:** Alpha Vantage has throttled the key. Wait for the provider window to reset.
-- **No stored records (404):** synchronize the symbol first, or verify that the same PostgreSQL volume/database is in use.
-- **Redis shows unavailable:** reads continue from PostgreSQL. Check `docker compose logs redis` to restore caching.
+- **No stored records (404):** synchronize the symbol first and verify that the expected `stock_agent_ops.db` file is in use.
+- **Redis shows unavailable:** reads continue from SQLite. Start Redis only if local caching is desired.
 - **Port already in use:** stop the conflicting local service or change the published host-side port.
-- **Database startup failure:** inspect `docker compose logs postgres backend`; ensure an old volume does not contain incompatible credentials.
+- **Database startup failure:** rerun `alembic upgrade head` and confirm the project directory is writable.
 
 ## Current limitations
 
@@ -169,4 +194,3 @@ This project is for educational and research use only. It does not provide inves
 
 - Prince Raval
 - Deep Trivedi
-

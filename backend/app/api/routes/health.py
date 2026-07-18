@@ -14,7 +14,7 @@ router = APIRouter(tags=["health"])
     "/health",
     response_model=HealthResponse,
     summary="Check service health",
-    description="Reports application, PostgreSQL, and optional Redis status.",
+    description="Reports application, SQLite database, and optional Redis status.",
 )
 async def health(request: Request, db: Annotated[AsyncSession, Depends(get_db)]) -> HealthResponse:
     database_status = "healthy"
@@ -32,6 +32,6 @@ async def health(request: Request, db: Annotated[AsyncSession, Depends(get_db)])
     return HealthResponse(
         status=status,
         application="healthy",
-        postgresql=database_status,
+        database=database_status,
         redis=redis_status,
     )

@@ -61,5 +61,5 @@ class StockSyncResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["healthy", "degraded", "unavailable"]
     application: str
-    postgresql: Literal["healthy", "unavailable"]
+    database: Literal["healthy", "unavailable"]
     redis: Literal["healthy", "unavailable"]

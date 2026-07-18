@@ -26,7 +26,13 @@ configure_logging(settings.debug)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    redis = Redis.from_url(
+        settings.redis_url,
+        decode_responses=True,
+        socket_connect_timeout=settings.redis_timeout_seconds,
+        socket_timeout=settings.redis_timeout_seconds,
+        retry_on_timeout=False,
+    )
     app.state.cache = CacheService(redis, settings.cache_ttl_seconds)
     app.state.alpha_vantage = AlphaVantageClient(
         settings.alpha_vantage_api_key,

@@ -14,7 +14,12 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.create_table(
         "stock_prices",
-        sa.Column("id", sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column(
+            "id",
+            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
+            primary_key=True,
+            autoincrement=True,
+        ),
         sa.Column("symbol", sa.String(20), nullable=False),
         sa.Column("trading_date", sa.Date(), nullable=False),
         sa.Column("open_price", sa.Numeric(20, 8), nullable=False),

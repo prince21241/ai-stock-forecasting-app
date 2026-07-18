@@ -1,4 +1,4 @@
-.PHONY: up down logs migrate test lint frontend-build clean
+.PHONY: up down logs migrate migrate-local backend-dev frontend-dev test lint frontend-build clean
 
 up:
 	docker compose up --build
@@ -12,6 +12,15 @@ logs:
 migrate:
 	docker compose run --rm backend alembic upgrade head
 
+migrate-local:
+	backend/.venv/Scripts/python.exe -m alembic -c backend/alembic.ini upgrade head
+
+backend-dev:
+	backend/.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --reload
+
+frontend-dev:
+	cd frontend && npm run dev
+
 test:
 	cd backend && python -m pytest
 
@@ -23,4 +32,3 @@ frontend-build:
 
 clean:
 	docker compose down --remove-orphans
-
