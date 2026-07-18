@@ -1,5 +1,5 @@
 from collections.abc import AsyncIterator
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
+from app.schemas.news import NewsArticle
 from app.schemas.stock import StockPriceCreate
 
 
@@ -54,6 +55,22 @@ class FakeAlphaVantage:
         ]
 
 
+class FakeNews:
+    async def fetch(self, symbol: str, limit: int) -> list[NewsArticle]:
+        return [
+            NewsArticle(
+                title=f"Latest {symbol} headline",
+                url="https://example.test/article",
+                source="Example News",
+                published_at=datetime(2026, 7, 18, 12, 0, tzinfo=UTC),
+                summary="A concise market update.",
+                sentiment_label="Somewhat-Bullish",
+                sentiment_score=0.25,
+                relevance_score=0.91,
+            )
+        ][:limit]
+
+
 def make_price(symbol: str, trading_date: date, close: str) -> StockPriceCreate:
     price = Decimal(close)
     return StockPriceCreate(
@@ -88,6 +105,7 @@ async def client(session: AsyncSession) -> AsyncIterator[AsyncClient]:
     app.dependency_overrides[get_db] = override_db
     app.state.cache = FakeCache()
     app.state.alpha_vantage = FakeAlphaVantage()
+    app.state.news = FakeNews()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as test_client:
         yield test_client
     app.dependency_overrides.clear()

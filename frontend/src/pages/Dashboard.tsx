@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loadForecastHistory, loadStockData, synchronizeStock, trainForecast } from "../api/stocks";
+import { loadForecastHistory, loadStockData, loadStockNews, synchronizeStock, trainForecast } from "../api/stocks";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Header } from "../components/Header";
 import { LoadingState } from "../components/LoadingState";
@@ -7,7 +7,8 @@ import { StockSearch } from "../components/StockSearch";
 import { StockChart } from "../components/StockChart";
 import { SummaryCards } from "../components/SummaryCards";
 import { ForecastPanel } from "../components/ForecastPanel";
-import type { ForecastResponse, StockListResponse } from "../types/stock";
+import { StockNews } from "../components/StockNews";
+import type { ForecastResponse, NewsArticle, StockListResponse } from "../types/stock";
 
 export function Dashboard() {
   const [symbol, setSymbol] = useState("AAPL");
@@ -17,6 +18,10 @@ export function Dashboard() {
   const [success, setSuccess] = useState("");
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [forecastHistory, setForecastHistory] = useState<ForecastResponse[]>([]);
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsError, setNewsError] = useState("");
+  const [newsCached, setNewsCached] = useState(false);
 
   async function loadData(target = symbol) {
     const data = await loadStockData(target.trim());
@@ -27,6 +32,16 @@ export function Dashboard() {
     return data;
   }
 
+  async function refreshNews(target: string) {
+    setNewsLoading(true); setNewsError("");
+    try {
+      const response = await loadStockNews(target);
+      setNews(response.data); setNewsCached(response.cached);
+    } catch (caught) {
+      setNews([]); setNewsError(caught instanceof Error ? caught.message : "Unable to load news.");
+    } finally { setNewsLoading(false); }
+  }
+
   async function run(action: "sync" | "load") {
     setLoading(true); setError(""); setSuccess("");
     try {
@@ -34,9 +49,11 @@ export function Dashboard() {
       if (action === "sync") {
         const sync = await synchronizeStock(target);
         await loadData(sync.symbol);
+        await refreshNews(sync.symbol);
         setSuccess(`${sync.symbol} synchronized: ${sync.inserted_or_updated_records} records stored or updated.`);
       } else {
         const data = await loadData(target);
+        await refreshNews(data.symbol);
         setSuccess(`${data.count} stored ${data.symbol} records loaded${data.cached ? " from cache" : ""}.`);
       }
     } catch (caught) {
@@ -71,6 +88,7 @@ export function Dashboard() {
         {success && <div className="message success" role="status">{success}</div>}
         <SummaryCards result={result} symbol={symbol} />
         <ForecastPanel forecast={forecast} history={forecastHistory} disabled={loading} onTrain={runForecast} />
+        <StockNews symbol={result?.symbol ?? symbol.toUpperCase()} articles={news} loading={newsLoading} error={newsError} cached={newsCached} />
         <section className="data-section">
           <div className="section-heading"><div><p className="eyebrow">Daily price history</p><h2>Stored market data</h2></div>{result && <span className="source-pill">{result.cached ? "Redis cache" : "SQLite"}</span>}</div>
           <StockChart rows={result?.data ?? []} symbol={result?.symbol ?? symbol.toUpperCase()} />

@@ -16,6 +16,7 @@
 - Empirical prediction range, direction estimate, and dashboard disclosure
 - Persisted forecast-run history with model versions and evaluation metrics
 - Quality gate that separates qualified experiments from `no_signal` results
+- Latest ticker-specific news and provider sentiment with graceful failure and Redis caching
 
 The model requires at least 100 stored daily records, matching Alpha Vantage's compact daily feed.
 It is an educational experiment, is not

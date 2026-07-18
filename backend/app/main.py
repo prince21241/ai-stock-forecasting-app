@@ -18,6 +18,7 @@ from app.core.exceptions import (
 from app.core.logging import configure_logging
 from app.db.session import engine
 from app.services.alpha_vantage import AlphaVantageClient
+from app.services.alpha_vantage_news import AlphaVantageNewsClient
 from app.services.cache_service import CacheService
 
 settings = get_settings()
@@ -35,6 +36,11 @@ async def lifespan(app: FastAPI):
     )
     app.state.cache = CacheService(redis, settings.cache_ttl_seconds)
     app.state.alpha_vantage = AlphaVantageClient(
+        settings.alpha_vantage_api_key,
+        settings.alpha_vantage_base_url,
+        settings.alpha_vantage_timeout_seconds,
+    )
+    app.state.news = AlphaVantageNewsClient(
         settings.alpha_vantage_api_key,
         settings.alpha_vantage_base_url,
         settings.alpha_vantage_timeout_seconds,

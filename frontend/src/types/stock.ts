@@ -41,3 +41,13 @@ export interface ForecastResponse {
 export interface ForecastHistoryResponse {
   symbol: string; count: number; data: ForecastResponse[];
 }
+
+export interface NewsArticle {
+  title: string; url: string; source: string; published_at: string; summary: string;
+  banner_image: string | null; sentiment_label: string;
+  sentiment_score: number; relevance_score: number;
+}
+
+export interface StockNewsResponse {
+  symbol: string; count: number; cached: boolean; data: NewsArticle[];
+}

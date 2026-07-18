@@ -2,7 +2,10 @@
 
 **AI-Driven Forecasting & Multi-Agent Platform — Phase 2 experimental forecasting**
 
-Stock Agent Ops is a modular full-stack application for synchronizing Alpha Vantage daily stock prices, storing them idempotently in a local SQLite database, serving them through FastAPI, optionally caching reads in Redis, and displaying stored data in a responsive React dashboard.
+Stock Agent Ops is a modular full-stack application for synchronizing Alpha Vantage daily stock
+prices, storing them idempotently in SQLite, serving them through FastAPI, optionally caching reads
+in Redis, and displaying stored data, experimental forecasts, and ticker-specific news in a React
+dashboard.
 
 Phase 2 adds an experimental, user-triggered next-trading-day ridge-regression forecast with
 walk-forward evaluation. AI agents, automated reports, MLflow, Feast, Kubernetes, Terraform, AWS,
@@ -148,6 +151,7 @@ curl http://localhost:8000/api/v1/stocks/AAPL/latest
 curl -X POST http://localhost:8000/api/v1/forecasts/AAPL/train
 curl http://localhost:8000/api/v1/forecasts/AAPL/latest
 curl "http://localhost:8000/api/v1/forecasts/AAPL/history?limit=10"
+curl "http://localhost:8000/api/v1/news/AAPL?limit=10"
 ```
 
 The forecast requires at least 100 stored daily records, matching Alpha Vantage's compact daily
@@ -157,6 +161,10 @@ of a zero-return baseline. The dashboard explicitly reports when the model fails
 baseline. Training runs within the request, and forecast runs and evaluation metrics are persisted
 in SQLite for audit and history views. A forecast is marked `qualified` only when it beats the
 baseline and achieves at least 55% directional accuracy; otherwise it is marked `no_signal`.
+
+The news endpoint uses Alpha Vantage `NEWS_SENTIMENT`, requests the latest ticker-specific articles,
+and caches normalized results for five minutes. News contains provider-generated sentiment and must
+not be interpreted as an application trading recommendation.
 
 The list endpoint also accepts ISO `start_date` and `end_date`. `limit` must be 1–5000. Supported symbols contain 1–15 letters, digits, periods, or hyphens.
 
@@ -196,6 +204,7 @@ Validate Compose configuration with `docker compose config`.
 - Authentication, authorization, streaming updates, and background scheduling are not implemented.
 - Synchronization is user-triggered and runs within the HTTP request.
 - The dashboard visualizes up to 500 stored daily records as an interactive candlestick and volume chart, with 1-month through all-history range controls.
+- News availability, depth, sentiment labels, and request frequency depend on Alpha Vantage.
 
 See [docs/roadmap.md](docs/roadmap.md) for future phases. Forecasting is experimental; agent
 capabilities remain future work.

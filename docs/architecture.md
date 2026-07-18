@@ -11,6 +11,9 @@ FastAPI /api/v1 (:8000) -----> Alpha Vantage TIME_SERIES_DAILY
           +-----> SQLite file, durable normalized prices
 ```
 
+The API also calls Alpha Vantage `NEWS_SENTIMENT` for ticker-specific headlines. Normalized news
+responses use the existing optional Redis cache and are not stored in SQLite.
+
 The API is separated into routes, services, repositories, schemas, and infrastructure adapters. Routes validate HTTP-specific inputs and delegate. `StockService` coordinates symbol validation, ingestion, persistence, cache invalidation, and reads. `StockRepository` owns SQLAlchemy queries and conflict-safe SQLite upserts. `CacheService` treats Redis as an optional optimization, so SQLite reads still work when Redis is unavailable.
 
 The unique constraint on `(symbol, trading_date, source)` is the final idempotency boundary. Alpha Vantage values are converted to `Decimal`, `date`, and `int` before reaching persistence.
