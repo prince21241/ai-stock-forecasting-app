@@ -4,6 +4,7 @@ from math import exp
 
 import numpy as np
 
+from app.repositories.forecast_repository import ForecastRepository, to_response
 from app.repositories.stock_repository import StockRepository
 from app.schemas.forecast import ForecastMetrics, ForecastResponse
 from app.utils.validation import normalize_symbol
@@ -76,20 +77,21 @@ def _predict(row: np.ndarray, model: tuple[np.ndarray, np.ndarray, np.ndarray]) 
 
 
 class ForecastService:
-    def __init__(self, repository: StockRepository) -> None:
-        self.repository = repository
+    def __init__(
+        self, stock_repository: StockRepository, forecast_repository: ForecastRepository
+    ) -> None:
+        self.stock_repository = stock_repository
+        self.forecast_repository = forecast_repository
 
     async def train_and_forecast(self, raw_symbol: str) -> ForecastResponse:
         symbol = normalize_symbol(raw_symbol)
-        records = await self.repository.get_all_prices_by_symbol(symbol)
+        records = await self.stock_repository.get_all_prices_by_symbol(symbol)
         if len(records) < MINIMUM_PRICES:
             message = (
                 f"At least {MINIMUM_PRICES} stored daily records are required; "
                 f"{len(records)} found."
             )
-            raise InsufficientForecastDataError(
-                message
-            )
+            raise InsufficientForecastDataError(message)
         close = np.asarray([float(row.close_price) for row in records])
         high = np.asarray([float(row.high_price) for row in records])
         low = np.asarray([float(row.low_price) for row in records])
@@ -123,7 +125,7 @@ class ForecastService:
         low_price = latest_close * (1 + predicted_return - interval)
         high_price = latest_close * (1 + predicted_return + interval)
         now = datetime.now(UTC)
-        return ForecastResponse(
+        forecast = ForecastResponse(
             symbol=symbol,
             as_of_date=records[-1].trading_date,
             latest_close=round(float(latest_close), 4),
@@ -135,6 +137,11 @@ class ForecastService:
             training_observations=len(dataset.targets),
             model_version=f"{symbol}-{records[-1].trading_date.isoformat()}-{len(records)}",
             trained_at=now,
+            signal_status=(
+                "qualified"
+                if model_mae < baseline_mae and directional_accuracy >= 0.55
+                else "no_signal"
+            ),
             metrics=ForecastMetrics(
                 model_mae_percent=round(model_mae * 100, 3),
                 baseline_mae_percent=round(baseline_mae * 100, 3),
@@ -143,3 +150,13 @@ class ForecastService:
                 beats_baseline=model_mae < baseline_mae,
             ),
         )
+        return to_response(await self.forecast_repository.save(forecast))
+
+    async def get_latest(self, raw_symbol: str) -> ForecastResponse | None:
+        run = await self.forecast_repository.get_latest(normalize_symbol(raw_symbol))
+        return to_response(run) if run else None
+
+    async def get_history(self, raw_symbol: str, limit: int) -> list[ForecastResponse]:
+        symbol = normalize_symbol(raw_symbol)
+        runs = await self.forecast_repository.get_history(symbol, limit)
+        return [to_response(run) for run in runs]

@@ -14,6 +14,8 @@
 - OHLCV-derived momentum, volatility, moving-average, range, and volume features
 - Expanding-window walk-forward evaluation against a zero-return baseline
 - Empirical prediction range, direction estimate, and dashboard disclosure
+- Persisted forecast-run history with model versions and evaluation metrics
+- Quality gate that separates qualified experiments from `no_signal` results
 
 The model requires at least 100 stored daily records, matching Alpha Vantage's compact daily feed.
 It is an educational experiment, is not

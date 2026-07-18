@@ -28,3 +28,8 @@ Phase 1 remains the data foundation. Phase 2 adds a separate, user-triggered for
 reads stored prices through `StockRepository`, engineers features in memory, performs walk-forward
 evaluation, and returns an experimental next-day forecast. It does not add AI agents or cloud
 deployment.
+
+Forecast results are stored in `forecast_runs`, including the input cutoff date, model version,
+prediction, validation metrics, and quality status. The quality gate requires the model to beat the
+zero-return baseline and reach at least 55% directional accuracy; failing runs remain visible as
+`no_signal` for auditability rather than being presented as actionable predictions.

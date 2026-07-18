@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -12,6 +13,7 @@ class ForecastMetrics(BaseModel):
 
 
 class ForecastResponse(BaseModel):
+    id: int | None = None
     symbol: str
     as_of_date: date
     latest_close: float = Field(gt=0)
@@ -24,5 +26,12 @@ class ForecastResponse(BaseModel):
     model_name: str = "ridge_regression_v1"
     model_version: str
     trained_at: datetime
+    signal_status: Literal["qualified", "no_signal"]
     metrics: ForecastMetrics
     disclaimer: str = "Experimental forecast for research only; not investment advice."
+
+
+class ForecastHistoryResponse(BaseModel):
+    symbol: str
+    count: int
+    data: list[ForecastResponse]

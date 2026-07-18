@@ -1,4 +1,4 @@
-import type { ForecastResponse, StockListResponse, StockSyncResponse } from "../types/stock";
+import type { ForecastHistoryResponse, ForecastResponse, StockListResponse, StockSyncResponse } from "../types/stock";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "")
   ?? "http://localhost:8000/api/v1";
@@ -33,4 +33,8 @@ export function loadStockData(symbol: string): Promise<StockListResponse> {
 
 export function trainForecast(symbol: string): Promise<ForecastResponse> {
   return request(`/forecasts/${encodeURIComponent(symbol)}/train`, { method: "POST" });
+}
+
+export function loadForecastHistory(symbol: string): Promise<ForecastHistoryResponse> {
+  return request(`/forecasts/${encodeURIComponent(symbol)}/history?limit=5`);
 }

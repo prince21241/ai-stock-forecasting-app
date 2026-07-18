@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loadStockData, synchronizeStock, trainForecast } from "../api/stocks";
+import { loadForecastHistory, loadStockData, synchronizeStock, trainForecast } from "../api/stocks";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Header } from "../components/Header";
 import { LoadingState } from "../components/LoadingState";
@@ -16,10 +16,14 @@ export function Dashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [forecastHistory, setForecastHistory] = useState<ForecastResponse[]>([]);
 
   async function loadData(target = symbol) {
     const data = await loadStockData(target.trim());
     setResult(data);
+    const history = await loadForecastHistory(data.symbol);
+    setForecastHistory(history.data);
+    setForecast(history.data[0] ?? null);
     return data;
   }
 
@@ -45,6 +49,8 @@ export function Dashboard() {
     try {
       const data = await trainForecast(symbol.trim());
       setForecast(data);
+      const history = await loadForecastHistory(data.symbol);
+      setForecastHistory(history.data);
       setSuccess(`${data.symbol} forecast trained and walk-forward evaluated.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to train forecast.");
@@ -64,7 +70,7 @@ export function Dashboard() {
         {loading && <LoadingState />}{error && <ErrorMessage message={error} />}
         {success && <div className="message success" role="status">{success}</div>}
         <SummaryCards result={result} symbol={symbol} />
-        <ForecastPanel forecast={forecast} disabled={loading} onTrain={runForecast} />
+        <ForecastPanel forecast={forecast} history={forecastHistory} disabled={loading} onTrain={runForecast} />
         <section className="data-section">
           <div className="section-heading"><div><p className="eyebrow">Daily price history</p><h2>Stored market data</h2></div>{result && <span className="source-pill">{result.cached ? "Redis cache" : "SQLite"}</span>}</div>
           <StockChart rows={result?.data ?? []} symbol={result?.symbol ?? symbol.toUpperCase()} />

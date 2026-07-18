@@ -146,13 +146,17 @@ curl -X POST http://localhost:8000/api/v1/stocks/AAPL/sync
 curl "http://localhost:8000/api/v1/stocks/AAPL?limit=100&order=desc"
 curl http://localhost:8000/api/v1/stocks/AAPL/latest
 curl -X POST http://localhost:8000/api/v1/forecasts/AAPL/train
+curl http://localhost:8000/api/v1/forecasts/AAPL/latest
+curl "http://localhost:8000/api/v1/forecasts/AAPL/history?limit=10"
 ```
 
 The forecast requires at least 100 stored daily records, matching Alpha Vantage's compact daily
 feed. It reports predicted return and price,
 an empirical 90% range, a direction estimate, walk-forward MAE, directional accuracy, and the MAE
 of a zero-return baseline. The dashboard explicitly reports when the model fails to beat that
-baseline. Training runs within the request and results are not yet persisted between requests.
+baseline. Training runs within the request, and forecast runs and evaluation metrics are persisted
+in SQLite for audit and history views. A forecast is marked `qualified` only when it beats the
+baseline and achieves at least 55% directional accuracy; otherwise it is marked `no_signal`.
 
 The list endpoint also accepts ISO `start_date` and `end_date`. `limit` must be 1–5000. Supported symbols contain 1–15 letters, digits, periods, or hyphens.
 
