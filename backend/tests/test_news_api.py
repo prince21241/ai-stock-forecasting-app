@@ -38,7 +38,7 @@ async def test_news_endpoint_and_cache(client: AsyncClient) -> None:
     second = await client.get("/api/v1/news/AAPL?limit=10")
     assert first.status_code == 200
     assert first.json()["symbol"] == "AAPL"
-    assert first.json()["data"][0]["title"] == "Latest AAPL headline"
+    assert first.json()["data"][0]["title"].startswith("AAPL update")
     assert first.json()["cached"] is False
     assert second.json()["cached"] is True
 

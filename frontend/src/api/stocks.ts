@@ -1,7 +1,8 @@
 import type { ForecastHistoryResponse, ForecastResponse, StockListResponse, StockNewsResponse, StockSyncResponse } from "../types/stock";
+import { normalizeForecast, normalizeForecastHistory } from "../utils/forecast";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "")
-  ?? "http://localhost:8000/api/v1";
+  ?? "/api/v1";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -32,11 +33,15 @@ export function loadStockData(symbol: string): Promise<StockListResponse> {
 }
 
 export function trainForecast(symbol: string): Promise<ForecastResponse> {
-  return request(`/forecasts/${encodeURIComponent(symbol)}/train`, { method: "POST" });
+  return request<ForecastResponse>(`/forecasts/${encodeURIComponent(symbol)}/train`, { method: "POST" }).then(
+    normalizeForecast,
+  );
 }
 
 export function loadForecastHistory(symbol: string): Promise<ForecastHistoryResponse> {
-  return request(`/forecasts/${encodeURIComponent(symbol)}/history?limit=5`);
+  return request<ForecastHistoryResponse>(`/forecasts/${encodeURIComponent(symbol)}/history?limit=5`).then(
+    normalizeForecastHistory,
+  );
 }
 
 export function loadStockNews(symbol: string): Promise<StockNewsResponse> {

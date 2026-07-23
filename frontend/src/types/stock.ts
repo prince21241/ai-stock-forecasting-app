@@ -27,6 +27,60 @@ export interface StockSyncResponse {
   synced_at: string;
 }
 
+export interface ForecastMetrics {
+  model_mae_percent: number;
+  baseline_mae_percent: number;
+  directional_accuracy_percent: number;
+  validation_observations: number;
+  beats_baseline: boolean;
+  brier_score?: number | null;
+}
+
+export interface ModelComparisonEntry {
+  model_name: string;
+  feature_set?: "price_only" | "with_sentiment";
+  model_mae_percent: number;
+  baseline_mae_percent: number;
+  directional_accuracy_percent: number;
+  validation_observations: number;
+  beats_baseline: boolean;
+  signal_status: "qualified" | "no_signal";
+  selected: boolean;
+}
+
+export interface SentimentComparison {
+  available: boolean;
+  price_only_mae_percent?: number | null;
+  with_sentiment_mae_percent?: number | null;
+  sentiment_improves_mae?: boolean | null;
+  selected_feature_set?: "price_only" | "with_sentiment";
+}
+
+export interface ReliabilityBin {
+  bin_start_percent: number;
+  bin_end_percent: number;
+  mean_predicted_percent: number;
+  observed_frequency_percent: number;
+  sample_count: number;
+}
+
+export interface CalibrationSummary {
+  method: string;
+  brier_score: number;
+  reliability_bins: ReliabilityBin[];
+}
+
+export interface HorizonForecast {
+  horizon: "1d" | "5d" | "20d" | "volatility";
+  label: string;
+  predicted_return_percent?: number | null;
+  predicted_volatility_percent?: number | null;
+  predicted_price?: number | null;
+  probability_up_percent?: number | null;
+  signal_status: "qualified" | "no_signal" | "insufficient_data";
+  metrics?: ForecastMetrics | null;
+}
+
 export interface ForecastResponse {
   id: number | null;
   symbol: string; as_of_date: string; latest_close: number;
@@ -34,8 +88,12 @@ export interface ForecastResponse {
   price_range_low: number; price_range_high: number; probability_up_percent: number;
   training_observations: number; model_name: string; model_version: string;
   trained_at: string; disclaimer: string; signal_status: "qualified" | "no_signal";
-  metrics: { model_mae_percent: number; baseline_mae_percent: number;
-    directional_accuracy_percent: number; validation_observations: number; beats_baseline: boolean; };
+  sentiment_features_used?: boolean;
+  sentiment_comparison?: SentimentComparison;
+  model_comparison?: ModelComparisonEntry[];
+  calibration?: CalibrationSummary | null;
+  horizons?: HorizonForecast[];
+  metrics: ForecastMetrics;
 }
 
 export interface ForecastHistoryResponse {

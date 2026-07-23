@@ -1,5 +1,5 @@
 from collections.abc import AsyncIterator
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -57,18 +57,27 @@ class FakeAlphaVantage:
 
 class FakeNews:
     async def fetch(self, symbol: str, limit: int) -> list[NewsArticle]:
-        return [
-            NewsArticle(
-                title=f"Latest {symbol} headline",
-                url="https://example.test/article",
-                source="Example News",
-                published_at=datetime(2026, 7, 18, 12, 0, tzinfo=UTC),
-                summary="A concise market update.",
-                sentiment_label="Somewhat-Bullish",
-                sentiment_score=0.25,
-                relevance_score=0.91,
+        articles: list[NewsArticle] = []
+        start = date(2023, 1, 2)
+        for index in range(min(limit, 30)):
+            published = datetime.combine(
+                start + timedelta(days=index * 3),
+                datetime.min.time(),
+                tzinfo=UTC,
             )
-        ][:limit]
+            articles.append(
+                NewsArticle(
+                    title=f"{symbol} update {index}",
+                    url=f"https://example.test/{symbol.lower()}-{index}",
+                    source="Example News",
+                    published_at=published,
+                    summary="A concise market update.",
+                    sentiment_label="Somewhat-Bullish",
+                    sentiment_score=0.1 + (index % 5) * 0.05,
+                    relevance_score=0.7 + (index % 3) * 0.1,
+                )
+            )
+        return articles
 
 
 def make_price(symbol: str, trading_date: date, close: str) -> StockPriceCreate:

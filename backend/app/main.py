@@ -24,6 +24,20 @@ from app.services.cache_service import CacheService
 settings = get_settings()
 configure_logging(settings.debug)
 
+cors_origins = {
+    settings.frontend_origin,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+}
+if settings.debug:
+    cors_origins.update(
+        {
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://192.168.1.198:5173",
+        }
+    )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,13 +70,22 @@ app = FastAPI(
     version="0.2.0",
     lifespan=lifespan,
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if settings.debug:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):5173",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=sorted(cors_origins),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 

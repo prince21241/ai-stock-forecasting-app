@@ -7,15 +7,16 @@ prices, storing them idempotently in SQLite, serving them through FastAPI, optio
 in Redis, and displaying stored data, experimental forecasts, and ticker-specific news in a React
 dashboard.
 
-Phase 2 adds an experimental, user-triggered next-trading-day ridge-regression forecast with
-walk-forward evaluation. AI agents, automated reports, MLflow, Feast, Kubernetes, Terraform, AWS,
+Phase 2 adds an experimental, user-triggered next-trading-day forecast with walk-forward
+evaluation, optional news-sentiment features, and automatic selection between ridge regression and
+LightGBM. AI agents, automated reports, MLflow, Feast, Kubernetes, Terraform, AWS,
 and OpenAI integrations are not implemented.
 
 ## Architecture and stack
 
 The React/Vite dashboard calls a FastAPI API. Synchronization requests fetch `TIME_SERIES_DAILY` data from Alpha Vantage, normalize prices as decimal values, and upsert them into SQLite. Read responses are cached in Redis for five minutes when Redis is available; Redis failures do not block SQLite reads. See [docs/architecture.md](docs/architecture.md).
 
-- Python 3.12, FastAPI, Pydantic v2, HTTPX
+- Python 3.12, FastAPI, Pydantic v2, HTTPX, LightGBM
 - SQLAlchemy 2 async, aiosqlite, SQLite, Alembic
 - Redis 7
 - React 19, TypeScript, Vite
@@ -154,8 +155,13 @@ curl "http://localhost:8000/api/v1/forecasts/AAPL/history?limit=10"
 curl "http://localhost:8000/api/v1/news/AAPL?limit=10"
 ```
 
-The forecast requires at least 100 stored daily records, matching Alpha Vantage's compact daily
-feed. It reports predicted return and price,
+The forecast requires at least 100 stored daily records, matching Alpha Vantage's compact daily feed.
+Training fetches up to 200 recent news articles when an API key is configured, compares price-only
+versus sentiment-augmented walk-forward MAE, and selects the stronger feature set. Ridge regression
+and LightGBM are both evaluated; the lower-MAE combination is selected for each stored run.
+Calibrated up-probabilities use walk-forward Platt scaling with Brier score and reliability bins.
+Separate 1-day, 5-day, 20-day, and next-day volatility forecasts each carry their own quality gate.
+It reports predicted return and price,
 an empirical 90% range, a direction estimate, walk-forward MAE, directional accuracy, and the MAE
 of a zero-return baseline. The dashboard explicitly reports when the model fails to beat that
 baseline. Training runs within the request, and forecast runs and evaluation metrics are persisted

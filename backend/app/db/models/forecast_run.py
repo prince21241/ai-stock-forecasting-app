@@ -1,6 +1,17 @@
 from datetime import date, datetime
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Index, Integer, String, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -30,6 +41,11 @@ class ForecastRun(Base):
     validation_observations: Mapped[int] = mapped_column(Integer, nullable=False)
     beats_baseline: Mapped[bool] = mapped_column(Boolean, nullable=False)
     signal_status: Mapped[str] = mapped_column(String(20), nullable=False)
+    sentiment_features_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    model_comparison_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    sentiment_comparison_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    calibration_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    horizons_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     trained_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

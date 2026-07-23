@@ -42,10 +42,27 @@ async def test_train_forecast_returns_evaluation(
     assert body["price_range_low"] < body["price_range_high"]
     assert body["id"] is not None
     assert body["signal_status"] in {"qualified", "no_signal"}
+    assert body["sentiment_features_used"] in {True, False}
+    assert len(body["model_comparison"]) >= 2
+    assert body["sentiment_comparison"]["available"] is True
+    assert body["sentiment_comparison"]["price_only_mae_percent"] is not None
+    assert body["calibration"] is not None
+    assert 0 <= body["calibration"]["brier_score"] <= 1
+    assert len(body["horizons"]) == 4
+    assert {horizon["horizon"] for horizon in body["horizons"]} == {
+        "1d",
+        "5d",
+        "20d",
+        "volatility",
+    }
+    selected = [entry for entry in body["model_comparison"] if entry["selected"]]
+    assert len(selected) == 1
+    assert selected[0]["model_name"] == body["model_name"]
 
     latest = await client.get("/api/v1/forecasts/AAPL/latest")
     assert latest.status_code == 200
     assert latest.json()["id"] == body["id"]
+    assert len(latest.json()["horizons"]) == 4
 
     await client.post("/api/v1/forecasts/AAPL/train")
     history = await client.get("/api/v1/forecasts/AAPL/history?limit=5")
